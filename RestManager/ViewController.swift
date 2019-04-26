@@ -71,4 +71,26 @@ class ViewController: UIViewController {
         }
     }
     
+    func getSingleUser() {
+        guard let url = URL(string: "https://reqres.in/api/users/1") else { return }
+        
+        rest.makeRequest(toURL: url, withHttpMethod: .get) { (results) in
+            if let data = results.data {
+                let decoder = JSONDecoder()
+                decoder.keyDecodingStrategy = .convertFromSnakeCase
+                guard let singleUserData = try? decoder.decode(SingleUserData.self, from: data),
+                    let user = singleUserData.data,
+                    let avatar = user.avatar,
+                    let url = URL(string: avatar) else { return }
+                
+                self.rest.getData(fromURL: url) { (avatarData) in
+                    guard let avatarData = avatarData else { return }
+                    let cachesDirectory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+                    let saveURL = cachesDirectory.appendingPathComponent("avatar.jpg")
+                    try? avatarData.write(to: saveURL)
+                    print("\nSaved Avatar URL:\n\(saveURL)\n")
+                }
+            }
+        }
+    }
 }
